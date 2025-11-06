@@ -9,9 +9,10 @@ import { toast } from 'sonner';
 interface TransactionListProps {
   transactions: Transaction[];
   onDeleteTransaction: (id: string) => void;
+  formatAmount: (amount: number) => string;
 }
 
-export function TransactionList({ transactions, onDeleteTransaction }: TransactionListProps) {
+export function TransactionList({ transactions, onDeleteTransaction, formatAmount }: TransactionListProps) {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
 
@@ -100,7 +101,7 @@ export function TransactionList({ transactions, onDeleteTransaction }: Transacti
                     transaction.type === 'income' ? 'text-success' : 'text-destructive'
                   }`}
                 >
-                  {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                  {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
                 </span>
 
                 <Button

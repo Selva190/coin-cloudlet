@@ -14,9 +14,10 @@ interface BudgetOverviewProps {
   transactions: Transaction[];
   budgets: Budget[];
   onUpdateBudget: (category: string, limit: number) => void;
+  formatAmount: (amount: number) => string;
 }
 
-export function BudgetOverview({ transactions, budgets, onUpdateBudget }: BudgetOverviewProps) {
+export function BudgetOverview({ transactions, budgets, onUpdateBudget, formatAmount }: BudgetOverviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [budgetLimit, setBudgetLimit] = useState('');
@@ -118,7 +119,7 @@ export function BudgetOverview({ transactions, budgets, onUpdateBudget }: Budget
               <div className="flex justify-between text-sm">
                 <span className="font-medium">{budget.category}</span>
                 <span className="text-muted-foreground">
-                  ${budget.spent.toFixed(2)} / ${budget.limit.toFixed(2)}
+                  {formatAmount(budget.spent)} / {formatAmount(budget.limit)}
                 </span>
               </div>
               <Progress
@@ -134,7 +135,7 @@ export function BudgetOverview({ transactions, budgets, onUpdateBudget }: Budget
               />
               {budget.percentage > 100 && (
                 <p className="text-xs text-destructive">
-                  Over budget by ${(budget.spent - budget.limit).toFixed(2)}
+                  Over budget by {formatAmount(budget.spent - budget.limit)}
                 </p>
               )}
             </div>
