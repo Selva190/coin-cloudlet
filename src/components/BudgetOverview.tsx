@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Budget, EXPENSE_CATEGORIES, Transaction } from '@/types/budget';
 import { toast } from 'sonner';
+import { budgetSchema } from '@/lib/validation';
 
 interface BudgetOverviewProps {
   transactions: Transaction[];
@@ -41,12 +42,24 @@ export function BudgetOverview({ transactions, budgets, onUpdateBudget, formatAm
     }
 
     const limit = parseFloat(budgetLimit);
-    if (isNaN(limit) || limit <= 0) {
+    if (isNaN(limit)) {
       toast.error('Please enter a valid budget limit');
       return;
     }
 
-    onUpdateBudget(selectedCategory, limit);
+    // Validate with zod schema
+    const validationResult = budgetSchema.safeParse({
+      category: selectedCategory,
+      limit,
+    });
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => e.message).join(', ');
+      toast.error(errors);
+      return;
+    }
+
+    onUpdateBudget(validationResult.data.category, validationResult.data.limit);
     setSelectedCategory('');
     setBudgetLimit('');
     setIsOpen(false);
@@ -95,6 +108,7 @@ export function BudgetOverview({ transactions, budgets, onUpdateBudget, formatAm
                   type="number"
                   step="0.01"
                   placeholder="0.00"
+                  max="999999999"
                   value={budgetLimit}
                   onChange={(e) => setBudgetLimit(e.target.value)}
                 />

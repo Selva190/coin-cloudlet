@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/types/budget';
 import { toast } from 'sonner';
+import { transactionSchema } from '@/lib/validation';
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: {
@@ -35,17 +36,32 @@ export function TransactionForm({ onAddTransaction }: TransactionFormProps) {
     }
 
     const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
+    if (isNaN(numAmount)) {
       toast.error('Please enter a valid amount');
       return;
     }
 
-    onAddTransaction({
+    // Validate with zod schema
+    const validationResult = transactionSchema.safeParse({
       type,
       amount: numAmount,
       category,
       description,
       date,
+    });
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(e => e.message).join(', ');
+      toast.error(errors);
+      return;
+    }
+
+    onAddTransaction({
+      type: validationResult.data.type,
+      amount: validationResult.data.amount,
+      category: validationResult.data.category,
+      description: validationResult.data.description,
+      date: validationResult.data.date,
     });
 
     setAmount('');
@@ -77,6 +93,7 @@ export function TransactionForm({ onAddTransaction }: TransactionFormProps) {
             type="number"
             step="0.01"
             placeholder="0.00"
+            max="999999999"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
@@ -103,6 +120,7 @@ export function TransactionForm({ onAddTransaction }: TransactionFormProps) {
           <Input
             id="description"
             placeholder="What was this for?"
+            maxLength={500}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />

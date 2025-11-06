@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Transaction, Budget } from '@/types/budget';
+import { budgetDataSchema } from '@/lib/validation';
 
 const STORAGE_KEY = 'budget-tracker-data';
 
@@ -10,9 +11,18 @@ interface BudgetData {
 
 export function useBudgetData() {
   const [data, setData] = useState<BudgetData>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Validate data structure with zod
+        const validated = budgetDataSchema.parse(parsed);
+        return validated as BudgetData;
+      }
+    } catch (error) {
+      console.error('Failed to load budget data, using defaults:', error);
+      // Clear corrupted data
+      localStorage.removeItem(STORAGE_KEY);
     }
     return { transactions: [], budgets: [] };
   });
